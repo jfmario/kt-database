@@ -1,10 +1,16 @@
 
 package com.johnfmarion.kt.db;
 
-import java.io.BufferedReader;
+import java.io.StringReader;
 
+import java.util.NoSuchElementException;
+import java.util.Scanner;
+
+import com.johnfmarion.kt.db.exceptions.InsufficientArgumentsException;
 import com.johnfmarion.kt.db.exceptions.UnrecognizedCommandException;
 import com.johnfmarion.kt.db.exceptions.UnrecognizedKeywordException;
+
+import com.johnfmarion.kt.db.records.Row1;
 
 import com.johnfmarion.kt.db.statements.Statement;
 import com.johnfmarion.kt.db.statements.StatementType;
@@ -20,7 +26,26 @@ fun doMetaCommand(command: String) {
 
 fun prepareStatement(statement: String): Statement {
   if (statement.startsWith("insert")) {
-    return Statement(StatementType.INSERT);
+  
+    val statementObject = Statement(StatementType.INSERT);
+    
+    val reader = Scanner(StringReader(statement));
+    reader.next();
+    
+    try {
+    
+      val id = reader.nextLong();
+      val username = reader.next();
+      val email = reader.next();
+      
+      statementObject.recordToInsert = Row1(id, username, email);
+    }
+    catch (e: NoSuchElementException) {
+      throw InsufficientArgumentsException(statement);
+    }
+    
+    
+    return statementObject;
   }
   else if (statement.startsWith("select")) {
     return Statement(StatementType.SELECT);
@@ -67,7 +92,7 @@ fun main(args: Array<String>) {
     try {
       statement = prepareStatement(userInput);
     }
-    catch(e: UnrecognizedKeywordException) {
+    catch(e: Exception) {
       println(e);
       continue;
     }
